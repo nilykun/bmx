@@ -10,4 +10,7 @@ dependencies:
   - r-gtsummary
   - r-gplots
   - r-ggplot2
+  - r-rmarkdown
+  - r-details
+  - r-sessioninfo
   - graphviz
