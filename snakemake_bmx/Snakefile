@@ -74,6 +74,15 @@ rule density_grp:
     Rscript 7-groupdensityplot.R
     """
 
+rule report:
+    "Produce the final report"
+    input:
+        "report.Rmd"
+    output: "report.docx"
+    shell: """
+    R -e "rmarkdown::render('report.Rmd',output_file='report.docx')"
+    """
+
 rule clean:
     "Clean up"
     shell: """
@@ -86,5 +95,10 @@ rule clean:
       rm -r plot
     else
       echo directory plot does not exist
+    fi
+    if [ -f report.docx ]; then
+      rm -r report.docx
+    else
+      echo file report.docx does not exist
     fi
     """

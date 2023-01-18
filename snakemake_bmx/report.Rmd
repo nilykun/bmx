@@ -1,0 +1,165 @@
+---
+title: "AHDS Assessment2 Repot"
+author: '2325988'
+date: "2023-01-16"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+  rmdformats::html_clean:
+    self_contained: yes
+    thumbnails: no
+    lightbox: yes
+    gallery: no
+    highlight: kate
+    number_sections: no
+    code_folding: show
+---
+
+```{r include=FALSE}
+library(gtsummary)
+library(gplots)
+library(ggplot2)
+```
+
+## data cleaning
+
+The dataset I chose for this assessment is the Body Measures Dataset from the National Health and Nutrition Examination Survey. The data were collected by the health technicians and were used to check how infants and children grow, and to analyse the trends of obesity and overweight in the U.S. The dataset includes body measurement data such as weight, height, head circumference, arm length and so on of infants and children. Data for different factors were collected according to the children’s age.
+<br>
+
+```{r echo=FALSE}
+rawdata<-read.csv("data/BMX_D.csv")
+head(rawdata,5)
+```
+
+<br>
+In the dataset, there are also codes showing the data measure component status and comments noted to identify the problems in the data, which can help us cleaning and analysing the data. After having a look of the raw data, we could find that there are some participants did not have complete data for their age group, also some group did not need to have all the factors tested. Therefore, there are a lot of missing data in the dataset. In some columns, there are more than 9000 missing data among all 9950 children. In order to analyse and visualize the data better, I decided to delete the columns with too many missing data and remove the missing data. After the data cleaning, the dataset has 13 columns and 5885 rows left.
+<br>
+Besides, we have the continuous BMI data. We could make better analysis if we put the BMI data into different groups according to the WHO BMI cut-off points. In the end, we have 15 columns and 5885 rows in the dataset when the classification is done.
+<br>
+
+```{r include=FALSE}
+summary(rawdata)
+
+#remove the factors with too many missing data
+data0<-rawdata %>% select(SEQN,BMDSTATS,BMXWT,BMXHT,BMXBMI,BMXLEG,BMXCALF,BMXARML,BMXARMC,BMXWAIST,BMXTHICR,BMXTRI,BMXSUB)
+
+data0<-na.omit(data0)
+
+head(data0,10)
+nrow(data0)
+summary(data0)
+```
+
+```{r include=FALSE}
+#classify the participants into group by their BMI
+data0$BMI_cat<-rep("Underweight",nrow(data0))
+for(i in 1:nrow(data0)) {
+  if(data0$BMXBMI[i]>=18.5) data0$BMI_cat[i]<-"Normal Range"
+  if(data0$BMXBMI[i]>=25) data0$BMI_cat[i]<-"Overweight"
+  if(data0$BMXBMI[i]>=30) data0$BMI_cat[i]<-"Obese I"
+  if(data0$BMXBMI[i]>=35) data0$BMI_cat[i]<-"Obese II"
+  if(data0$BMXBMI[i]>=40) data0$BMI_cat[i]<-"Obese III"
+}
+```
+
+```{r include=FALSE}
+#write data into a csv file
+write.csv(data0,"data/BMX_clean.csv")
+```
+
+## data visualization
+
+```{r echo=FALSE}
+data1<-read.csv("data/BMX_clean.csv")
+
+f<-factor(data1$BMI_cat,ordered=T,levels=c("Underweight","Normal Range","Overweight","Obese I","Obese II","Obese III"))
+data1<-data.frame(data1[,1:14],BMI_cat=f)
+
+head(data1,10)
+```
+
+<br>
+Among the measurements given in the dataset, BMI is the value that can show whether the child is overweight directly, while other values have some relationship with the obesity. So, we want to make some data visualization to estimate the proportion of overweight and obesity, and the correlation between the factors.
+<br>
+
+```{r echo=FALSE}
+ggplot(data1,aes(x=BMI_cat)) +
+  geom_bar(width=1,fill=c("#DBE7F4","#BBD1E9","#9CBCDE","#7CA6D3","#5E90C7","#427BB8")) +
+  coord_polar(theta="x",start=0) +
+  geom_text(aes(label=after_stat(count)),stat="count",vjust="outward",hjust="outward",colour="black",show.legend=T) +
+  labs(title="Rose Plot of BMI categories")
+```
+
+<br>
+First, I have the rose plot of the BMI Categories, showing the amount of people in each group. Among the 5885 children in the cleaned dataset, most children (n=2561) had the normal BMI value, while 740 of them were underweight and 1703 of them were overweight. And 881 of them had different levels of obesity, group obese I, II, III had 686, 152, 43 children respectively. 43.5% of the children in this study had normal BMI, however, 12.6% were underweight and 43.9% were overweight or obese. The proportion of unhealthy kids is high in this research, showing a worrisome trend in the American children.
+<br>
+
+```{r echo=FALSE}
+ggplot(data1,aes(BMXWT,BMXHT)) +
+  geom_point(size=1,colour="#70B4CF") +
+  geom_smooth(method=lm,colour="#3A73AD",se=F) +
+  labs(x="Weight(kg)",y="Standing Height(cm)")
+```
+
+<br>
+Also, I make the scatter plot of weight and standing height, and fit a linear regression module of their relationship. It shows that there is a corelation between. If the weight is 0, the expected height is 130.9448cm. And when the weight increases 1 kg, height increases 0.4918 cm averagely.
+<br>
+
+```{r include=FALSE}
+ggplot(data1) +
+  geom_density(aes(x=BMXBMI),colour="#70B4CF",alpha=0.3,show.legend=T) +
+  labs(title="Kernel Density Plot of BMI")
+```
+
+```{r include=FALSE}
+cnames<-c("BMXWT","BMXHT","BMXBMI","BMXLEG","BMXCALF","BMXARML","BMXARMC","BMXWAIST","BMXTHICR","BMXTRI","BMXSUB")
+
+df<-data.frame()
+
+for(i in c(2,4:9)) {
+  dat<-data.frame(id=1:nrow(data1))
+  dat$BMX<-rep(cnames[i],nrow(data1))
+  dat$value<-data1[,i+3]
+  dat$BMI_cat<-data1$BMI_cat
+  df<-rbind(df,dat)
+}
+```
+
+```{r echo=FALSE}
+boxplot2(data1[,4:14],main="Boxplot of BMX Data",
+         col=c("#3AA258","#3AA468","#3AA77A","#3AA98C","#3AAC9F",
+        "#3AAAAE","#3A9AB1","#3A8AB3","#3A79B6","#3A68B8","#1D3256"))
+```
+
+```{r include=FALSE}
+boxplot2(data=data1,BMXWT~BMI_cat,top=T,varwidth=T,main="Boxplot of Weight",
+         col=c("#DBE7F4","#BBD1E9","#9CBCDE","#7CA6D3","#5E90C7","#427BB8"))
+```
+
+```{r echo=FALSE}
+ggplot(df,aes(x=value)) +
+  geom_density(aes(colour=BMX),alpha=0.3) +
+  labs(x="cm",title="Kernel Density Plot of BMX")
+```
+
+```{r echo=FALSE}
+ggplot(df,aes(x=value,group=BMI_cat)) +
+  geom_density(aes(colour=BMI_cat,fill=BMI_cat),alpha=0.3) +
+  facet_grid(BMX~.) +
+  labs(title="Kernel Density Plot of Bmx grouped by BMI Categories")
+```
+
+<br>
+There are also box plots and density plots, which show the distribution of the data, and the distribution of different values in each BMI categories. From the plots, we can see that upper leg length, maximal calf circumference, upper arm length, arm circumference, and thigh circumference had narrower distribution, while the distribution of standing height and waist circumference were wider. Moreover, when looking at the density plot of BMX data grouped by BMI categories, we can tell that children from different group did not have much difference in standing height, upper arm length and upper leg length. On the other hand, the gap of arm circumference, maximal calf circumference, thigh circumference and waist circumference between each category are much bigger. That means the degree of obesity has more influence on the circumference of the body parts than the height of the length of the body parts.
+<br>
+From the visualization, we can conclude that 43.5% of the children in the study had the normal BMI, 12.6% of them were underweight and 43.9% of them had different degrees of overweight or obesity, which shows a worrying trend among the U.S. children. Besides, the circumference of body part can indicate the obesity better than the length.
+<br>
+Later, a snakemake was created according to the codes, and all the files were uploaded to the github for the version control. Here is computer environment and packages used in this study.
+<br>
+
+```{r echo=FALSE}
+details::details(sessioninfo::session_info(),
+                 summary = "R and package versions")
+```
