@@ -1,0 +1,13 @@
+name: snakemake_bmx
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - snakemake=7.18
+  - r=4.1
+  - r-gtsummary
+  - r-gplots
+  - r-ggplot2
+  - graphviz

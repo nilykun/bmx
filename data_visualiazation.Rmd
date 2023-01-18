@@ -1,0 +1,99 @@
+---
+title: "data visualisation"
+author: '2325988'
+date: "2023-01-13"
+output: html_document
+---
+
+```{r}
+library(gplots)
+library(ggplot2)
+library(ggiraph)
+library(ggiraphExtra)
+```
+
+```{r}
+data1<-read.csv("BMX_clean.csv")
+head(data1,10)
+
+f<-factor(data1$BMI_cat,ordered=T,levels=c("Underweight","Normal Range","Overweight","Obese I","Obese II","Obese III"))
+data1<-data.frame(data1[,1:14],BMI_cat=f)
+```
+
+"X"        "SEQN"     "BMDSTATS" 
+"BMXWT"    Weight (kg)
+"BMXHT"    Standing Height (cm)
+"BMXBMI"   Body Mass Index (kg/m^2)
+"BMXLEG"   Upper Leg Length (cm)
+"BMXCALF"  Maximal Calf Circumference (cm)
+"BMXARML"  Upper Arm Length (cm)
+"BMXARMC"  Arm Circumference (cm)
+"BMXWAIST" Waist Circumference (cm)
+"BMXTHICR" Thigh Circumference (cm)
+"BMXTRI"   Triceps Skinfold (mm)
+"BMXSUB"   Subscapular Skinfold (mm)
+"BMI_cat"  Bmi Categories
+
+```{r}
+ggplot(data1,aes(x=BMI_cat)) +
+  geom_bar(width=1,fill=c("#DBE7F4","#BBD1E9","#9CBCDE","#7CA6D3","#5E90C7","#427BB8")) +
+  coord_polar(theta="x",start=0) +
+  geom_text(aes(label=after_stat(count)),stat="count",vjust="outward",hjust="outward",colour="black",show.legend=T) +
+  labs(title="Rose Plot of BMI categories")
+```
+
+```{r}
+ggBoxplot(data1[,4:14]) +
+  labs(title="Boxplot of BMX Data")
+```
+
+```{r}
+ggplot(data1,aes(BMXWT,BMXHT)) +
+  geom_point(size=1,colour="#70B4CF") +
+  geom_smooth(method=lm,colour="#3A73AD",se=F) +
+  labs(x="Weight(kg)",y="Standing Height(cm)")
+```
+
+```{r}
+ggplot(data1) +
+  geom_density(aes(x=BMXBMI),colour="#70B4CF",alpha=0.3,show.legend=T) +
+  labs(title="Kernel Density Plot of BMI")
+```
+
+```{r}
+cnames<-c("BMXWT","BMXHT","BMXBMI","BMXLEG","BMXCALF","BMXARML","BMXARMC","BMXWAIST","BMXTHICR","BMXTRI","BMXSUB")
+
+df<-data.frame()
+
+for(i in c(2,4:9)) {
+  dat<-data.frame(id=1:nrow(data1))
+  dat$BMX<-rep(cnames[i],nrow(data1))
+  dat$value<-data1[,i+3]
+  dat$BMI_cat<-data1$BMI_cat
+  df<-rbind(df,dat)
+}
+```
+
+```{r}
+ggplot(df,aes(x=value)) +
+  geom_density(aes(colour=BMX),alpha=0.3) +
+  labs(x="cm",title="Kernel Density Plot of BMX")
+```
+
+```{r}
+boxplot2(data=data1,BMXWT~BMI_cat,top=T,varwidth=T,main="Boxplot of Weight",
+         col=c("#DBE7F4","#BBD1E9","#9CBCDE","#7CA6D3","#5E90C7","#427BB8"))
+```
+
+```{r}
+ggplot(df,aes(x=value,group=BMI_cat)) +
+  geom_density(aes(colour=BMI_cat,fill=BMI_cat),alpha=0.3) +
+  facet_grid(BMX~.) +
+  labs(title="Kernel Density Plot of Bmx grouped by BMI Categories")
+```
+
+```{r}
+details::details(sessioninfo::session_info(),
+                 summary = "R and package versions")
+```
+

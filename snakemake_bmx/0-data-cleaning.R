@@ -1,0 +1,26 @@
+rawdata<-read.csv("data/BMX_D.csv")
+head(rawdata,10)
+summary(rawdata)
+
+#remove the factors with too many missing data
+library(gtsummary)
+data0<-rawdata %>% select(SEQN,BMDSTATS,BMXWT,BMXHT,BMXBMI,BMXLEG,BMXCALF,BMXARML,BMXARMC,BMXWAIST,BMXTHICR,BMXTRI,BMXSUB)
+
+data0<-na.omit(data0)
+
+head(data0,10)
+nrow(data0)
+summary(data0)
+
+#classify the participants into group by their BMI
+data0$BMI_cat<-rep("Underweight",nrow(data0))
+for(i in 1:nrow(data0)) {
+  if(data0$BMXBMI[i]>=18.5) data0$BMI_cat[i]<-"Normal Range"
+  if(data0$BMXBMI[i]>=25) data0$BMI_cat[i]<-"Overweight"
+  if(data0$BMXBMI[i]>=30) data0$BMI_cat[i]<-"Obese I"
+  if(data0$BMXBMI[i]>=35) data0$BMI_cat[i]<-"Obese II"
+  if(data0$BMXBMI[i]>=40) data0$BMI_cat[i]<-"Obese III"
+}
+
+#write data into a csv file
+write.csv(data0,"data/BMX_clean.csv")

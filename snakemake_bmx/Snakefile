@@ -1,0 +1,90 @@
+rule all:
+    "The default rule"
+    input: "plot/7-groupdensityplot.png"
+
+rule cleaning:
+    "Data Cleaning"
+    input:
+        "data/BMX_D.csv"
+    output: "data/BMX_clean.csv"
+    shell: """
+    Rscript 0-data-cleaning.R
+    """
+
+rule rose:
+    "Make a Rose Plot for BMI Categories"
+    input:
+        "data/BMX_clean.csv"
+    output: "plot/1-roseplot.png"
+    shell: """
+    Rscript 1-roseplot.R
+    """
+
+rule box:
+    "Make a Box Plot for BMX Data"
+    input:
+        "data/BMX_clean.csv"
+    output: "plot/2-boxplot.png"
+    shell: """
+    Rscript 2-boxplot.R
+    """
+
+rule scatter:
+    "Make a Scatter Plot for Weight and Sanding Height"
+    input:
+        "data/BMX_clean.csv"
+    output: "plot/3-scatterplot.png"
+    shell: """
+    Rscript 3-scatterplot.R
+    """
+
+rule density_bmi:
+    "Make a Density Plot for BMI"
+    input:
+        "data/BMX_clean.csv"
+    output: "plot/4-densityplot-bmi.png"
+    shell: """
+    Rscript 4-densityplot-bmi.R
+    """
+
+rule density_bmx:
+    "Make a Density Plot for BMX Data"
+    input:
+        "data/BMX_clean.csv"
+    output: "plot/5-densityplot-bmx.png"
+    shell: """
+    Rscript 5-densityplot-bmx.R
+    """
+
+rule box_grp:
+    "Make a Box Plot of Standing Height grouped by BMI Categories"
+    input:
+        "data/BMX_clean.csv"
+    output: "plot/6-groupboxplot.png"
+    shell: """
+    Rscript 6-groupboxplot.R
+    """
+
+rule density_grp:
+    "Make a Density Plot of BMX Data grouped by BMI Categories"
+    input:
+        "data/BMX_clean.csv"
+    output: "plot/7-groupdensityplot.png"
+    shell: """
+    Rscript 7-groupdensityplot.R
+    """
+
+rule clean:
+    "Clean up"
+    shell: """
+    if [ -f data/BMX_clean.csv ]; then
+      rm -r data/BMX_clean.csv
+    else
+      echo file BMX_clean.csv does not exist
+    fi
+    if [ -d plot ]; then
+      rm -r plot
+    else
+      echo directory plot does not exist
+    fi
+    """
