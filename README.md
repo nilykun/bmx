@@ -35,4 +35,4 @@ AHDS_assessment <br>
 │   │   ├── 5-densityplot-bmx.png (the density plot for the BMX data) <br>
 │   │   ├── 6-groupboxplot.png (the box plot for the BMX data grouped by the BMI categories) <br>
 │   └── └── 7-groupdensityplot.png (the density plot for the BMX data grouped by the BMI categories) <br>
-└── README.md (this describes briefly what the research compendium is about, where to find everything and how to run the code)
+└── README.md 
